@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Happy Birthday Mom!</title>
+  <style>
+    :root {
+      --bg: #191a2b;
+      --pink: #ffb6c1;
+      --gold: #ffd700;
+      --sky: #add8e6;
+      --lav: #e6e6fa;
+      --rose: #ffd1dc;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+
+    .title {
+      position: absolute;
+      top: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: var(--gold);
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 3.2em;
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--lav);
+      font-size: 1.3em;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+    }
+
+    .ui {
+      position: absolute;
+      bottom: 15%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .message {
+      min-width: 320px;
+      max-width: 760px;
+      padding: 14px 24px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--pink);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      text-align: center;
+      font-size: 1.1em;
+      font-weight: 500;
+      backdrop-filter: blur(6px);
+    }
+
+    button {
+      background: linear-gradient(180deg, var(--pink), #ff98b3);
+      border: 2px solid white;
+      color: white;
+      padding: 12px 28px;
+      border-radius: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+      font-size: 1.1em;
+      transition: transform 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    .sig {
+      position: absolute;
+      bottom: 4%;
+      right: 4%;
+      color: var(--rose);
+      font-weight: 600;
+      font-size: 1em;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <div class="title">
+    <h1>Happy Birthday Mom!</h1>
+    <div class="subtitle">From your daughter</div>
+  </div>
+
+  <div class="ui">
+    <div id="msg" class="message" aria-live="polite">Click the button for a special message!</div>
+    <button id="btn" type="button">Special Message</button>
+  </div>
+
+  <div class="sig">With love, your daughter ♥</div>
+
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = window.innerWidth;
+    let H = canvas.height = window.innerHeight;
+
+    const COLORS = {
+      palePink: '#ffb6c1',
+      gold: '#ffd700',
+      white: '#ffffff',
+      sky: '#add8e6',
+      lav: '#e6e6fa',
+      rose: '#ffd1dc'
+    };
+
+    function rand(min, max){ return Math.random()*(max-min)+min }
+
+    class Confetti {
+      constructor(){
+        this.x = rand(0, W);
+        this.y = rand(-H, H);
+        this.vx = rand(-1.5, 1.5);
+        this.vy = rand(0.5, 2.5);
+        this.size = rand(4, 9);
+        this.color = [COLORS.palePink, COLORS.gold, COLORS.lav, COLORS.sky, COLORS.white][Math.floor(rand(0, 5))];
+        this.rot = rand(0, Math.PI*2);
+        this.spin = rand(-0.1, 0.1);
+      }
+      update(){
+        this.x += this.vx;
+        this.y += this.vy;
+        this.rot += this.spin;
+        if (this.y > H + 20) {
+          this.y = rand(-100, -10);
+          this.x = rand(0, W);
+        }
+      }
+      draw(){
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rot);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size*0.6);
+        ctx.restore();
+      }
+    }
+
+    class Balloon {
+      constructor(x, y, color){
+        this.x = x; this.y = y; this.color = color;
+        this.vy = rand(-0.6, -1.5);
+        this.offset = rand(0, 1000);
+      }
+      update(){
+        this.y += this.vy;
+        this.x += Math.sin((Date.now() + this.offset) / 800) * 0.4;
+        if (this.y < -120) {
+          this.y = H + rand(20, 120);
+          this.x = rand(40, W - 40);
+        }
+      }
+      draw(){
+        ctx.beginPath();
+        ctx.ellipse(this.x, this.y, 22, 30, 0, 0, Math.PI*2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = COLORS.white;
+        ctx.stroke();
+      }
+    }
+
+    class Heart {
+      constructor(){
+        this.x = rand(30, W - 30);
+        this.y = rand(-100, -10);
+        this.vy = rand(0.6, 2.2);
+        this.size = rand(10, 26);
+        this.color = [COLORS.palePink, COLORS.lav, COLORS.rose][Math.floor(rand(0, 3))];
+      }
+      update(){
+        this.y += this.vy;
+        if (this.y > H + 40) {
+          this.y = rand(-140, -10);
+          this.x = rand(20, W - 20);
+        }
+      }
+      draw(){
+        const x = this.x, y = this.y, s = this.size;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.bezierCurveTo(x + s/2, y - s/2, x + s, y + s/3, x, y + s);
+        ctx.bezierCurveTo(x - s, y + s/3, x - s/2, y - s/2, x, y);
+        ctx.fill();
+      }
+    }
+
+    class Bubble {
+      constructor(){
+        this.x = rand(0, W);
+        this.y = rand(H, H + 200);
+        this.vy = rand(-2.2, -0.8);
+        this.r = rand(1, 4);
+        this.color = [COLORS.palePink, COLORS.white, COLORS.lav][Math.floor(rand(0, 3))];
+      }
+      update(){
+        this.y += this.vy;
+        if (this.y < -20) {
+          this.y = rand(H, H + 200);
+          this.x = rand(0, W);
+        }
+      }
+      draw(){
+        ctx.beginPath();
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = 0.9;
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    const confettis = new Array(120).fill().map(() => new Confetti());
+    const balloons = new Array(10).fill().map(() => new Balloon(rand(60, W-60), rand(80, H+60), [COLORS.palePink, COLORS.lav, COLORS.rose, COLORS.gold, COLORS.sky][Math.floor(rand(0, 5))]));
+    const hearts = new Array(12).fill().map(() => new Heart());
+    const bubbles = new Array(40).fill().map(() => new Bubble());
+
+    function drawBackground(){
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#151526');
+      g.addColorStop(1, '#0f0f1a');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      for (let i = 0; i < 60; i++) {
+        const x = (i * 37) % W;
+        const y = (i * 73) % H;
+        const r = (i % 6 === 0) ? 2 : 1;
+        const br = 140 + (i % 40);
+        ctx.fillStyle = `rgb(${br},${br},${br})`;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    function loop(){
+      drawBackground();
+      confettis.forEach(p => { p.update(); p.draw(); });
+      balloons.forEach(b => { b.update(); b.draw(); });
+      hearts.forEach(h => { h.update(); h.draw(); });
+      bubbles.forEach(b => { b.update(); b.draw(); });
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+
+    const messages = [
+      'Thank you for all your love and care!',
+      "You're the best mom in the world!",
+      "I appreciate everything you do for us!",
+      'Wishing you a day filled with joy and laughter!',
+      'I love you more than words can express!',
+      "You're my inspiration every day!",
+      'Thank you for being my guiding star!',
+      'Your love makes everything better!'
+    ];
+
+    const btn = document.getElementById('btn');
+    const msgEl = document.getElementById('msg');
+    let idx = 0;
+    btn.addEventListener('click', () => {
+      idx = (idx + 1) % messages.length;
+      msgEl.textContent = messages[idx];
+      msgEl.animate(
+        [{transform:'scale(0.96)'},{transform:'scale(1)'}],
+        {duration:220,easing:'ease-out'}
+      );
+    });
+
+    window.addEventListener('resize', () => {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
